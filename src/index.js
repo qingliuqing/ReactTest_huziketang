@@ -1,92 +1,59 @@
-import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import CommentApp from './CommentApp';
-import * as serviceWorker from './serviceWorker';
-import PropTypes from 'prop-types';
+function createStore (state, stateChanger) {
+    const listeners = [];
+    const subscribe = (listener) => listeners.push(listener);
+    const getState = () => state;
+    const dispatch = (action) => {
+        stateChanger(state, action);
+        listeners.forEach((listener) => listener());
+    };
+    return { getState, dispatch, subscribe };
+}
 
-class Index extends Component {
-    static childContextTypes = {
-        themeColor: PropTypes.string
-    }
+// 模块（组件）之间需要共享数据
+// 数据可能被任意修改导致不可预料的结果
+function renderApp (appState) {
+    renderTitle(appState.title);
+    renderContent(appState.content);
+}
 
-    constructor() {
-        super();
-        this.state = { themeColor: 'green'};
-    }
+function renderTitle (title) {
+    const titleDOM = document.getElementById('title');
+    titleDOM.innerHTML = title.text;
+    titleDOM.style.color = title.color;
+}
+function renderContent (content) {
+    const contentDOM = document.getElementById('content');
+    contentDOM.innerHTML = content.text;
+    contentDOM.style.color = content.color;
+}
 
-    getChildContext() {
-        return {
-            themeColor: this.state.themeColor
-        };
-    }
+let appState = {
+    title: {
+        text: 'React.js 小书',
+        color: 'red'
+    },
+    content: {
+        text: 'React.js 小书内容',
+        color: 'blue'
+    },
+};
 
-    render () {
-      return (
-        <div>
-          <Header />
-          <Main />
-        </div>
-      )
+function stateChanger (state, action) {
+    switch (action.type) {
+        case 'UPDATE_TITLE_TEXT':
+            state.title.text = action.text;
+            break;
+        case 'UPDATE_TITLE_COLOR':
+            state.title.color = action.color;
+            break
+        default:
+            break
     }
-  }
-  
-  class Header extends Component {
-    render () {
-      return (
-      <div>
-        <h2>This is header</h2>
-        <Title />
-      </div>
-      )
-    }
-  }
-  
-  class Main extends Component {
-    render () {
-      return (
-      <div>
-        <h2>This is main</h2>
-        <Content />
-      </div>
-      )
-    }
-  }
-  
-  class Title extends Component {
-      static contextTypes = {
-          themeColor: PropTypes.string
-      }
-    render () {
-      return (
-        <h1
-            style={
-                { color: this.context.themeColor }
-            }>
-            React.js 小书标题
-        </h1>
-      )
-    }
-  }
-  
-  class Content extends Component {
-    render () {
-      return (
-      <div>
-        <h2>React.js 小书内容</h2>
-      </div>
-      )
-    }
-  }
+}
 
-ReactDOM.render(
-    // <CommentApp>
-    // </CommentApp>,
-    <Index/>,
-    document.getElementById('root'));
+const store = createStore(appState, stateChanger);
+store.subscribe(() => renderApp(store.getState())) // 监听数据变化
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+renderApp(appState) // 首次渲染页面
+store.dispatch({ type: 'UPDATE_TITLE_TEXT', text: '《React.js 小书》' }) // 修改标题文本
+store.dispatch({ type: 'UPDATE_TITLE_COLOR', color: 'blue' }) // 修改标题颜色
