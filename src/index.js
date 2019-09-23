@@ -1,16 +1,71 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { createStore } from 'redux'
-import { Provider } from 'react-redux'
-import CommentApp from './comment-react-redux/containers/CommentApp'
-import commentsReducer from './comment-react-redux/reducers/comment'
-import './index.css'
+import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-const store = createStore(commentsReducer)
+class Bar extends React.Component {
+    componentDidMount() {
+        console.log('componentDidMount');
+    }
+    render() {
+        const { idx } = this.props;
+        return (
+            <div>
+                in Bar: { idx }
+            </div>
+        );
+    }
+}
 
-ReactDOM.render(
-  <Provider store={store}>
-    <CommentApp />
-  </Provider>,
-  document.getElementById('root')
-);
+class App extends React.Component {
+    constructor(prop) {
+        super(prop);
+        this.state = {
+            idx: 1
+        };
+    }
+
+    handleClick = () => {
+        this.setState(state => ({
+            idx: state.idx + 1
+        }));
+    }
+
+    render() {
+        return (
+            <div>
+                <div>
+                    { this.state.idx }
+                    <button onClick={this.handleClick}>
+                        add
+                    </button>
+                </div>
+                <div>
+                    <Router>
+                        <Route render={
+                            () => (
+                                <Bar idx={ this.state.idx}/>
+                            )
+                        } />
+                        {/* <Route component={
+                            () => (
+                                <Bar idx={ this.state.idx}/>
+                            )
+                        } /> */}
+                    </Router>
+                </div>
+            </div>
+        );
+    }
+}
+
+  ReactDOM.render(
+    <App />,
+      document.getElementById('root')
+    );
+
+// ReactDOM.render(
+//   <Provider store={store}>
+//     <CommentApp />
+//   </Provider>,
+//   document.getElementById('root')
+// );
